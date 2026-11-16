@@ -1,2 +1,2 @@
 # Anis Spice Circuit Simulator
-> Anis Spice Circuit Simulator is a spice based on electronics circuit simulator
+> Anis Spice Circuit Simulator is an electronics circuit simulator
