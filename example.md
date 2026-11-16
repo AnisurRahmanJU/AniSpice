@@ -686,13 +686,12 @@ D3 c 0 DX
 ### 51. LED with current-limiting resistor
 
 ```css
-* LED driver
-Vs 1 0 DC 5
+* LED with current-limiting resistor
+V1 1 0 SIN(0 5 100 0 0 0)
 R1 1 a 330
 D1 a 0 LED
 .model LED D(Is=1e-18 N=2)
-.op
-.dc Vs 0 5 0.1
+.tran 0.1m 30m
 .end
 ```
 
