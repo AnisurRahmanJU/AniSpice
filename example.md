@@ -1,6 +1,6 @@
 # AniSpice Code Examples
 
-## 1. DC Resistor Circuits
+## `1. DC Resistor Circuits`
 
 ### 1. Voltage divider
 
@@ -153,7 +153,7 @@ R2 2 0 50
 .end
 ```
 
-## 2. Transient: RC, RL, RLC
+## `2. Transient: RC, RL, RLC`
 
 ### 11. RC charge and discharge (square wave)
 
@@ -306,7 +306,7 @@ C2 b 0 2u
 .end
 ```
 
-## 3. AC Frequency Response and Filters
+## `3. AC Frequency Response and Filters`
 
 ### 23. RC low-pass (fc ≈ 1.59 kHz)
 
@@ -513,7 +513,7 @@ R2 out 0 50
 .end
 ```
 
-## 4. Diodes and Rectifiers
+## `4. Diodes and Rectifiers`
 
 ### 39. Diode forward I-V curve
 
@@ -695,7 +695,7 @@ D1 a 0 LED
 .end
 ```
 
-## 5. Source Waveforms
+## `5. Source Waveforms`
 
 ### 52. Exponentially damped sine
 
@@ -729,7 +729,7 @@ R1 b 0 1k
 .end
 ```
 
-## 6. Applications
+## `6. Applications`
 
 ### 55. Bridge rectifier with reservoir capacitor (ripple)
 
