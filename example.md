@@ -1,4 +1,4 @@
-# Anicss Circuit Examples
+# AniSpice Circuit Examples
 
 ## 1. DC Resistor Circuits
 
