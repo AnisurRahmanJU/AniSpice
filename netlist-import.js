@@ -31,7 +31,7 @@ R1 in out 1k
 C1 out 0 1u
 .tran 100u 50m
 .end`],
-      ['Diode vs red LED', `* Diode (1N4148) vs red LED, both fed from 5 V through 470 ohm
+      ['Diode vs red LED', `* LED with 5 V AC through 470 ohm
 * Write or Paste your Spice code here and click Create Circuit button
 V1 1 0 SIN(0 5 100 0 0 0)
 R1 1 a 470
