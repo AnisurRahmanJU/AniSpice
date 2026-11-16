@@ -33,11 +33,11 @@ C1 out 0 1u
 .end`],
       ['Diode vs red LED', `* Diode (1N4148) vs red LED, both fed from 5 V through 470 ohm
 * Write or Paste your Spice code here and click Create Circuit button
-V1 in 0 DC 5
-R1 in a 470
-D1 a 0 1N4148
-R2 in b 470
-LED1 b 0 LED RED
+V1 1 0 SIN(0 5 100 0 0 0)
+R1 1 a 470
+D1 a 0 LED
+.model LED D(Is=1e-18 N=2)
+.tran 0.1m 30m
 .end`]
     ]},
     {topic:'1. DC Resistor Circuits', items:[
