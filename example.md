@@ -683,36 +683,7 @@ D3 c 0 DX
 .end
 ```
 
-### 51. Diode AND gate
-
-```css
-* Diode AND gate
-Vcc vcc 0 DC 5
-Va a 0 PULSE(0 5 0 1n 1n 1m 2m)
-Vb b 0 PULSE(0 5 0 1n 1n 2m 4m)
-R1 vcc y 1k
-D1 y a DX
-D2 y b DX
-.model DX D(Is=1e-14 N=1)
-.tran 20u 4m
-.end
-```
-
-### 52. Diode OR gate
-
-```css
-* Diode OR gate
-Va a 0 PULSE(0 5 0 1n 1n 1m 2m)
-Vb b 0 PULSE(0 5 0 1n 1n 2m 4m)
-D1 a y DX
-D2 b y DX
-R1 y 0 1k
-.model DX D(Is=1e-14 N=1)
-.tran 20u 4m
-.end
-```
-
-### 53. LED with current-limiting resistor
+### 51. LED with current-limiting resistor
 
 ```css
 * LED driver
@@ -725,27 +696,9 @@ D1 a 0 LED
 .end
 ```
 
-### 54. Schottky versus silicon diode
-
-The Schottky (`DS`) conducts at a lower voltage.
-
-```css
-* Schottky vs silicon
-V1 in 0 DC 0
-R1 in a 100
-D1 a 0 DS
-R2 in b 100
-D2 b 0 DX
-.model DS D(Is=1e-8 N=1.05)
-.model DX D(Is=1e-14 N=1)
-.op
-.dc V1 0 5 0.05
-.end
-```
-
 ## 5. Source Waveforms
 
-### 55. Exponentially damped sine
+### 52. Exponentially damped sine
 
 ```css
 * Damped sine source
@@ -755,7 +708,7 @@ R1 in 0 1k
 .end
 ```
 
-### 56. Square wave through an RC low-pass (harmonic filtering)
+### 53. Square wave through an RC low-pass (harmonic filtering)
 
 ```css
 * Square wave into RC filter
@@ -766,18 +719,7 @@ C1 out 0 100n
 .end
 ```
 
-### 57. Arbitrary PWL stimulus
-
-```css
-* PWL source into RC
-V1 in 0 PWL(0 0 1m 0 1.1m 5 3m 5 3.1m 0 5m 0)
-R1 in out 1k
-C1 out 0 1u
-.tran 10u 6m
-.end
-```
-
-### 58. Two series sine sources (100 Hz beat)
+### 54. Two series sine sources (100 Hz beat)
 
 ```css
 * Beat between 1 kHz and 1.1 kHz
@@ -790,7 +732,7 @@ R1 b 0 1k
 
 ## 6. Applications
 
-### 59. Bridge rectifier with reservoir capacitor (ripple)
+### 55. Bridge rectifier with reservoir capacitor (ripple)
 
 ```css
 * Bridge rectifier with filter cap
@@ -807,7 +749,7 @@ R2 p 0 100
 .end
 ```
 
-### 60. Series-pass regulator (LED reference)
+### 56. Series-pass regulator (LED reference)
 
 Output stays near 1.2 V once the input is high enough.
 
@@ -825,7 +767,7 @@ R2 out 0 1k
 .end
 ```
 
-### 61. Third-order Butterworth LC low-pass (fc = 1 kHz, 50 Ω)
+### 57. Third-order Butterworth LC low-pass (fc = 1 kHz, 50 Ω)
 
 ```css
 * 3rd-order Butterworth LC low-pass
@@ -839,7 +781,7 @@ R2 out 0 50
 .end
 ```
 
-### 62. LC delay line (4 sections, Z0 ≈ 32 Ω)
+### 58. LC delay line (4 sections, Z0 ≈ 32 Ω)
 
 The pulse arrives about 32 µs later per section.
 
