@@ -1,4 +1,4 @@
-# AniSpice Circuit Examples
+# AniSpice Code Examples
 
 ## 1. DC Resistor Circuits
 
