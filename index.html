@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AniSpice Circuit Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ============================== TOPBAR ============================== -->
+  <div id="topbar">
+    <a style="text-decoration:none;"><div class="brand"><div class="mark"></div>AniSpice<small>Circuit Simulator</small></div></a>
+    <div class="topbar-div"></div>
+
+    <button class="tbtn ghost" id="btn-new" title="New circuit">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">New</span>
+    </button>
+    <button class="tbtn ghost" id="btn-open" title="Open example / load netlist file">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h5l2 2h11v10H3z"/></svg><span class="lbl">Open</span>
+    </button>
+    <button class="tbtn ghost" id="btn-save" title="Save circuit as netlist (.cir)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span class="lbl">Save</span>
+    </button>
+    <input type="file" id="fileinput" accept=".cir,.sp,.spice,.net,.txt,.json,text/plain,application/json" class="hidden">
+
+    <div class="topbar-div"></div>
+
+    <button class="tbtn primary" id="btn-run" title="Run transient simulation (Space)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span class="lbl">Run</span>
+    </button>
+
+    <!-- Analysis buttons (handled by analysis.js) -->
+    <div class="an-group">
+      <button class="tbtn ghost" id="btn-dc" title="DC operating point">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg><span class="lbl">DC Solve</span>
+      </button>
+      <button class="tbtn ghost" id="btn-an-dc" title="DC sweep analysis">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20h18M3 20V4M6 17l5-5 3 3 6-8"/></svg><span class="lbl">DC Sweep</span>
+      </button>
+      <button class="tbtn ghost" id="btn-an-ac" title="AC sweep (frequency response)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-8 5-8 8 0s5 8 8 0 3-6 4-6"/></svg><span class="lbl">AC Sweep</span>
+      </button>
+      <button class="tbtn ghost" id="btn-an-tr" title="Time-domain analysis">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span class="lbl">Time Domain</span>
+      </button>
+    </div>
+
+    <!-- SPEED BAR (slider). Keeps id="sim-speed" so script.js still reads .value -->
+    <div class="speed-control" title="Simulation speed (double-click to reset to 0.1×)">
+      <label for="sim-speed">Speed</label>
+      <span class="sp-end">0.05×</span>
+      <input type="range" id="sim-speed" min="0.05" max="0.5" step="0.05" value="0.1" aria-label="Simulation speed">
+      <span class="sp-end">0.5×</span>
+      <output id="sim-speed-val" for="sim-speed">0.1×</output>
+    </div>
+
+    <div class="simstat" id="simstat"><span class="dot"></span><span id="simstat-text">idle</span></div>
+
+    <div class="tb-spacer"></div>
+
+    <button class="tbtn ghost theme-toggle" id="btn-theme" title="Toggle light / dark theme" aria-label="Toggle light / dark theme">
+      <i class="fa-solid fa-sun theme-icon theme-icon-sun"></i>
+      <i class="fa-solid fa-moon theme-icon theme-icon-moon"></i>
+    </button>
+
+    <div class="topbar-div"></div>
+
+    <div class="view-toggle" title="Toggle schematic / realistic rendering">
+      <span class="vt-label on" id="lbl-schem">SCHEMATIC</span>
+      <div class="rocker" id="viewrocker"><div class="knob"></div></div>
+      <span class="vt-label" id="lbl-real">REALISTIC</span>
+    </div>
+
+    <div class="topbar-div"></div>
+    <button class="tbtn ghost" id="btn-zoomout" title="Zoom out">−</button>
+    <span id="zoomreadout">100%</span>
+    <button class="tbtn ghost" id="btn-zoomin" title="Zoom in">+</button>
+    <button class="tbtn ghost" id="btn-fit" title="Fit to screen">Fit</button>
+  </div>
+
+  <!-- ============================== MAIN ============================== -->
+  <div id="main">
+
+    <!-- PARTS PALETTE -->
+    <div id="palette">
+      <div class="palette-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="partsearch" placeholder="Search parts…">
+      </div>
+      <div id="palette-root"></div>
+    </div>
+
+    <!-- CANVAS STAGE -->
+    <div id="stage-wrap">
+      <canvas id="gridcanvas"></canvas>
+      <canvas id="wirecanvas"></canvas>
+      <canvas id="compcanvas"></canvas>
+      <canvas id="overlaycanvas"></canvas>
+      <div class="stage-toolbar">
+        <button id="st-select" title="Select tool (V)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l7 17 2-7 7-2z"/></svg></button>
+        <button id="st-wire" title="Wire tool (W)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/><path d="M6.5 17.5L17.5 6.5"/></svg></button>
+        <button id="st-probe" title="Voltage probe (P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6M12 22v-8M6 14h12l-2-4H8z"/></svg></button>
+        <button id="st-delete" title="Delete selection (Del)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg></button>
+      </div>
+      <div id="hint">Drag a part onto the grid to place it. Click a terminal to start a wire.</div>
+      <div id="coordread">x:0.00  y:0.00</div>
+      <div id="draglabel"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div id="rightpanel">
+      <div id="rp-resizer" role="separator" aria-orientation="vertical" aria-label="Resize side panel" aria-valuemin="260" aria-valuenow="340" tabindex="0" title="Drag to resize (double-click to reset)"></div>
+      <div class="rp-tabs">
+        <div class="rp-tab active" data-pane="pane-props">Properties</div>
+        <div class="rp-tab" data-pane="pane-netlist">Netlist</div>
+        <div class="rp-tab" data-pane="pane-console">Console</div>
+        <div class="rp-tab" id="tab-spice" data-pane="pane-spice">Draw CirSpice</div>
+      </div>
+      <div class="rp-pane active" id="pane-props">
+        <div class="prop-empty" id="prop-empty">Select a component<br>to edit its properties.</div>
+        <div id="prop-content" class="hidden"></div>
+      </div>
+      <div class="rp-pane" id="pane-netlist">
+        <div class="netlist-actions">
+          <button class="tbtn ghost" id="btn-netlist-refresh">↻ Rebuild</button>
+          <button class="tbtn ghost" id="btn-netlist-copy">⧉ Copy</button>
+        </div>
+        <div id="netlist-out">* Netlist will appear here once&#10;* the circuit has nodes.</div>
+      </div>
+      <div class="rp-pane" id="pane-console">
+        <div id="console-out"></div>
+      </div>
+
+      <!-- NGSPICE CODE WINDOW -->
+      <div class="rp-pane" id="pane-spice">
+        <p class="spice-help">Type or paste ngspice code. Supported: R, C, L, V (DC/SIN/PULSE), I, D/LED, S.
+          Use node <b>0</b> as ground.</p>
+        <textarea id="spice-in" spellcheck="false" placeholder="* paste ngspice netlist here"></textarea>
+        <button class="tbtn primary spice-create" id="spice-create" title="Draw the circuit from this code (Ctrl/Cmd+Enter)">⚡ Create Circuit</button>
+        <div class="btnrow">
+          <button class="tbtn ghost" id="spice-sample">Load sample</button>
+          <button class="tbtn ghost" id="spice-clear">Clear</button>
+        </div>
+        <label class="spice-opt"><input type="checkbox" id="spice-autorun" checked> Run simulation after creating</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== BOTTOM ============================== -->
+  <div id="bottom">
+    <div id="scope-wrap">
+      <div id="scope-head">
+        <div class="ch" id="scope-legend"></div>
+        <div id="scope-timebase">10 ms/div</div>
+      </div>
+      <canvas id="scopecanvas"></canvas>
+    </div>
+    <div id="meters">
+      <div class="meters-title">Live Meters</div>
+      <div class="meter-grid" id="meter-grid">
+        <div class="meter-empty">Place probes or run simulation to see readings.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast-wrap" id="toastwrap"></div>
+
+<div id="ctxmenu">
+  <div class="ci" id="ctx-rotate">Rotate <kbd>R</kbd></div>
+  <div class="ci" id="ctx-flip">Flip <kbd>F</kbd></div>
+  <div class="ci" id="ctx-dup">Duplicate <kbd>⌘D</kbd></div>
+  <hr>
+  <div class="ci danger" id="ctx-delete">Delete <kbd>Del</kbd></div>
+</div>
+
+<div id="modal-backdrop">
+  <div id="modal">
+    <div class="modal-head"><h3>Example Circuits</h3><button id="modal-close">×</button></div>
+    <div class="modal-body">
+      <div class="examples-grid" id="examples-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== ANALYSIS DIALOG (analysis.js) ============================== -->
+<div id="an-backdrop">
+  <div id="an-modal" role="dialog" aria-modal="true" aria-labelledby="an-title">
+    <div class="an-head">
+      <h3 id="an-title">DC Operating Point</h3>
+      <div id="an-tabs">
+        <button class="tbtn ghost" data-tab="op">DC Operating Point</button>
+        <button class="tbtn ghost" data-tab="dc">DC Sweep</button>
+        <button class="tbtn ghost" data-tab="ac">AC Sweep</button>
+        <button class="tbtn ghost" data-tab="tr">Time Domain</button>
+      </div>
+      <button id="an-close" aria-label="Close">×</button>
+    </div>
+    <div class="an-body">
+      <div id="an-settings"></div>
+      <div class="an-main">
+        <div id="an-legend"></div>
+        <div id="an-plotwrap">
+          <canvas id="an-canvas"></canvas>
+          <div id="an-tip"></div>
+        </div>
+        <div id="an-table"></div>
+        <div id="an-status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== FOOTER ============================== -->
+<footer id="footer">
+  <div class="footer-left">
+    <span class="status-indicator"></span>
+    <span>AniSpice Engine v1.0.4</span>
+  </div>
+  <div class="footer-center">
+    <span>Shortcuts: <kbd>Space</kbd> Run &nbsp;•&nbsp; <kbd>W</kbd> Wire &nbsp;•&nbsp; <kbd>V</kbd> Select &nbsp;•&nbsp; <kbd>R</kbd> Rotate</span>
+  </div>
+  <div class="footer-right">
+    <a href="https://github.com/AnisurRahmanJU/Anis-Circuit-Simulator" id="link-docs" target="_blank">Github Repo</a>
+    <a href="https://www.grameenphone.academy/public-profile/GP153876" id="link-about" target="_blank">About Me</a>
+  </div>
+</footer>
+<script src="script.js"></script>
+<script src="netlist-import.js"></script>
+<script src="examples-fix.js"></script>
+<script src="analysis.js"></script>
+<script src="spice-highlight.js"></script>
+<script>
+/* ============================================================
+   SPEED BAR
+   The slider keeps id="sim-speed", so script.js can still read
+   its .value (0.05 – 0.5). This snippet only handles the UI:
+   readout text, filled-track colour, double-click reset, and
+   fires a 'change' event while dragging so the simulation speed
+   updates live (a range input normally fires 'change' only on
+   release).
+============================================================ */
+(function(){
+  const sl  = document.getElementById('sim-speed');
+  const out = document.getElementById('sim-speed-val');
+  if (!sl || !out) return;
+  const DEFAULT = 0.1;
+
+  function paint(){
+    const min = parseFloat(sl.min), max = parseFloat(sl.max), v = parseFloat(sl.value);
+    sl.style.setProperty('--fill', ((v - min) / (max - min) * 100) + '%');
+    out.textContent = (Math.round(v * 100) / 100) + '×';
+  }
+  function fireChange(){ sl.dispatchEvent(new Event('change', { bubbles: true })); }
+
+  sl.addEventListener('input', function(){ paint(); fireChange(); });
+  sl.addEventListener('dblclick', function(){ sl.value = DEFAULT; paint(); fireChange(); });
+  paint();
+
+  /* Apply the default speed on startup: tell script.js the slider value
+     (0.1) once the page has loaded, so the simulation starts at the same
+     speed the slider shows instead of waiting for the first drag. */
+  function applyInitial(){ sl.value = DEFAULT; paint(); fireChange(); }
+  applyInitial();
+  document.addEventListener('DOMContentLoaded', applyInitial);
+  window.addEventListener('load', applyInitial);
+})();
+</script>
+<script>
+/* ============================================================
+   THEME (light / dark) — toggled via the fa-sun / fa-moon button.
+   Persists for the session and follows the OS preference on
+   first load. Notifies script.js (window.onThemeChange) so the
+   canvas-drawn schematic can restyle its hardcoded colors too.
+============================================================ */
+(function(){
+  function systemPrefersLight(){
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  }
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    try { sessionStorage.setItem('voltra-theme', theme); } catch(e){}
+    if (typeof window.onThemeChange === 'function') window.onThemeChange(theme);
+  }
+  let saved = null;
+  try { saved = sessionStorage.getItem('voltra-theme'); } catch(e){}
+  applyTheme(saved || (systemPrefersLight() ? 'light' : 'dark'));
+
+  document.getElementById('btn-theme').addEventListener('click', function(){
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(current === 'light' ? 'dark' : 'light');
+  });
+})();
+</script>
+</body>
+</html>
