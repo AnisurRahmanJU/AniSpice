@@ -784,6 +784,7 @@ R2 d 0 32
   const menu = document.getElementById('ex-menu');
   const lbl  = btn.querySelector('.ex-label');
   document.body.appendChild(menu);   // top-level popup: never clipped, always above the panels
+  let lastW = window.innerWidth;
   const DEFAULT_LABEL = '📂 Load example…';
 
   EXAMPLES.forEach((g, gi)=>{
@@ -811,7 +812,7 @@ R2 d 0 32
     else       { menu.style.bottom = 'auto'; menu.style.top = (r.bottom + 4) + 'px'; }
   }
   function openMenu(){
-    menu.hidden = false; btn.classList.add('open'); placeMenu();
+    menu.hidden = false; btn.classList.add('open'); lastW = window.innerWidth; placeMenu();
     const cur = menu.querySelector('.ex-item.sel'); if (cur) cur.scrollIntoView({block:'nearest'});
   }
   function closeMenu(){ menu.hidden = true; btn.classList.remove('open'); }
@@ -831,8 +832,8 @@ R2 d 0 32
   });
   document.addEventListener('pointerdown', e=>{ if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) closeMenu(); }, true);
   window.addEventListener('keydown', e=>{ if (e.key === 'Escape' && !menu.hidden) closeMenu(); }, true);
-  window.addEventListener('resize', closeMenu);
-  pane.addEventListener('scroll', closeMenu);
+  /* phones fire 'resize' (address bar, keyboard) and 'scroll' constantly: only a real width change closes the list */
+  window.addEventListener('resize', ()=>{ if (window.innerWidth !== lastW){ lastW = window.innerWidth; closeMenu(); } });
 
   document.getElementById('spice-clear').addEventListener('click', ()=>{
     input.value = '';
