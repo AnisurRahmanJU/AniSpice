@@ -1092,3 +1092,66 @@ body {
     min-height: 160px !important;
   }
 }
+
+
+/* ============================================================
+   RESPONSIVE FIX v2  (appended last, so it wins over everything above)
+
+   1) SIMULATION STOPPING AFTER ~3-4 SECONDS ON PHONES
+      Cause: backdrop-filter:blur() on the overlays that sit on top of
+      the live canvas (#hint, #coordread, stage toolbar buttons, modal
+      backdrops). The canvas is redrawn every animation frame, so the
+      browser had to re-blur everything behind those overlays every
+      frame. Phones run out of GPU/compositor budget after a few
+      seconds, frame rate collapses and the animation looks frozen.
+      Fix: no backdrop blur anywhere; slightly more opaque backgrounds
+      give the same look.
+
+   2) "LOAD EXAMPLE" LIST NOT VISIBLE ON PHONES / SMALL SCREENS
+      Cause: the popup is position:fixed and placed by JS from the
+      button's position. On a long stacked mobile page the button is
+      often near / below the screen edge, so the popup landed off
+      screen. Fix: on small screens the list is a bottom sheet pinned
+      to the viewport (always visible, scrollable, safe-area aware),
+      whatever the page scroll position or soft keyboard state.
+============================================================ */
+
+/* ---------- 1) no backdrop blur over live canvases ---------- */
+html body #hint,
+html body #coordread,
+html body .stage-toolbar button,
+html body #modal-backdrop,
+html body #an-backdrop{
+  -webkit-backdrop-filter:none !important;
+  backdrop-filter:none !important;
+}
+html body #hint,
+html body #coordread{background:color-mix(in srgb, var(--bg-1) 94%, transparent);}
+html body .stage-toolbar button{background:color-mix(in srgb, var(--bg-2) 96%, transparent);}
+
+/* ---------- 2) Load-example list: bottom sheet on small screens ---------- */
+@media (max-width:820px){
+  html body .ex-menu{
+    position:fixed !important;
+    left:8px !important; right:8px !important;
+    top:auto !important;
+    bottom:calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    width:auto !important; min-width:0 !important; max-width:none !important;
+    max-height:min(62vh, 460px) !important;
+    max-height:min(62dvh, 460px) !important;
+    z-index:10000 !important;
+    border-radius:14px !important;
+    box-shadow:0 -6px 40px rgba(0,0,0,.55), 0 0 0 100vmax rgba(8,10,14,.45) !important;
+    overflow-x:hidden; overflow-y:auto;
+    overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y;
+  }
+  html body .ex-menu .ex-topic{top:0 !important; padding:10px 14px; font-size:11px;}
+}
+
+/* landscape phones: keep the sheet inside the short viewport */
+@media (max-width:900px) and (max-height:480px){
+  html body .ex-menu{
+    max-height:calc(100vh - 16px) !important;
+    max-height:calc(100dvh - 16px) !important;
+  }
+}
