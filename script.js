@@ -1328,7 +1328,7 @@ const stageWrap = document.getElementById('stage-wrap');
 
 function resizeCanvases(){
   const w = stageWrap.clientWidth, h = stageWrap.clientHeight;
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   Object.values(canvases).forEach(cv=>{
     cv.width = w*dpr; cv.height = h*dpr; cv.style.width = w+'px'; cv.style.height = h+'px';
   });
@@ -1977,7 +1977,7 @@ const SCOPE_WINDOW = 0.05; // seconds shown on screen
 function resizeScope(){
   const wrap = document.getElementById('scope-wrap');
   const w = wrap.clientWidth, h = wrap.clientHeight;
-  const dpr = window.devicePixelRatio||1;
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
   scopeCanvas.width = w*dpr; scopeCanvas.height = h*dpr;
   scopeCanvas.style.width = w+'px'; scopeCanvas.style.height = h+'px';
   scopeCtx.setTransform(dpr,0,0,dpr,0,0);
@@ -2024,6 +2024,11 @@ function stopSim(){
 let lastFrameTime = 0;
 function runStep(ts){
   if (!state.running) return;
+  try { runStepBody(); }
+  catch (err){ console.error('runStep error', err); }
+  if (state.running) state.runTimer = requestAnimationFrame(runStep);
+}
+function runStepBody(){
   const stepsPerFrame = Math.max(1, Math.round(6 * state.simSpeed));
   for (let s=0; s<stepsPerFrame; s++){
     const result = stepTransient(circuit, state.dt);
@@ -2038,7 +2043,6 @@ function runStep(ts){
   renderScope();
   renderMeters();
   if ([...state.selection].length===1) updatePropReadouts(circuit.components.find(c=>state.selection.has(c.id)));
-  state.runTimer = requestAnimationFrame(runStep);
 }
 
 function recordHistory(result){
@@ -2147,12 +2151,15 @@ function renderScope(){
     scopeCtx.stroke();
   });
 
-  document.getElementById('scope-timebase').textContent = (SCOPE_WINDOW*1000).toFixed(0)+' ms window · ±'+vmax.toFixed(2)+' V';
+  const tbEl = document.getElementById('scope-timebase');
+  const tbTxt = (SCOPE_WINDOW*1000).toFixed(0)+' ms window · ±'+vmax.toFixed(2)+' V';
+  if (tbEl.textContent !== tbTxt) tbEl.textContent = tbTxt;
   const legend = document.getElementById('scope-legend');
-  legend.innerHTML = keys.slice(0,4).map(k=>{
+  const legHtml = keys.slice(0,4).map(k=>{
     const name = k.startsWith('probe:') ? 'Probe' : (circuit.components.find(c=>c.id===k)?.label || COMP[circuit.components.find(c=>c.id===k)?.type]?.label || k);
     return `<span class="chip"><i style="background:${colors[k]}"></i>${name}</span>`;
   }).join('');
+  if (legend._last !== legHtml){ legend._last = legHtml; legend.innerHTML = legHtml; }
 }
 function drawScopeIdle(w,h){
   scopeCtx.fillStyle = state.theme==='light' ? 'rgba(85,95,114,.6)' : 'rgba(154,164,184,.4)'; scopeCtx.font = '11px var(--mono)';
@@ -2162,7 +2169,7 @@ function drawScopeIdle(w,h){
 
 function renderMeters(){
   const grid = document.getElementById('meter-grid');
-  if (!sim.lastResult){ grid.innerHTML = '<div class="meter-empty">Place probes or run simulation to see readings.</div>'; return; }
+  if (!sim.lastResult){ const e='<div class="meter-empty">Place probes or run simulation to see readings.</div>'; if (grid._last!==e){ grid._last=e; grid.innerHTML=e; } return; }
   let html = '';
   state.probes.forEach((pr,i)=>{
     const term = circuit.terminalNear(pr.a.x, pr.a.y, 0.5);
@@ -2175,7 +2182,8 @@ function renderMeters(){
       html += `<div class="meter probe"><div class="ml">${c.label||'Ammeter'}</div><div class="mv">${fmtEng(c._i||0,'A')}</div></div>`;
     }
   });
-  grid.innerHTML = html || '<div class="meter-empty">Place probes or run simulation to see readings.</div>';
+  const out = html || '<div class="meter-empty">Place probes or run simulation to see readings.</div>';
+  if (grid._last !== out){ grid._last = out; grid.innerHTML = out; }
 }
 
 document.getElementById('btn-run').addEventListener('click', toggleRun);
@@ -2429,7 +2437,16 @@ function boot(){
   renderMeters();
 
   // keep everything correctly sized as the window/panels resize
-  window.addEventListener('resize', ()=>{ resizeCanvases(); resizeScope(); });
+  let _rzW=-1,_rzH=-1,_rzQ=false;
+  window.addEventListener('resize', ()=>{
+    if (_rzQ) return; _rzQ = true;
+    requestAnimationFrame(()=>{
+      _rzQ = false;
+      const w = stageWrap.clientWidth, h = stageWrap.clientHeight;
+      if (w===_rzW && h===_rzH) return;
+      _rzW=w; _rzH=h; resizeCanvases(); resizeScope();
+    });
+  });
 
   log('Voltra ready — drag a part onto the grid, or click Open for examples.', 'ok');
 }
