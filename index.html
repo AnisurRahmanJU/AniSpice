@@ -248,6 +248,48 @@
 </footer>
 <script src="script.js"></script>
 <script src="netlist-import.js"></script>
+<script>
+/* Drag empty canvas (mouse / touch / pen) = move the whole circuit.
+   Middle-button or Alt+drag also pans. A click without moving still deselects. */
+(function(){
+  const stage = document.getElementById('stage-wrap');
+  if (!stage || typeof state === 'undefined') return;
+  let pan = null;
+
+  stage.addEventListener('pointerdown', e => {
+    if (e.target.closest('.stage-toolbar')) return;
+    if (e.pointerType === 'mouse' && e.button > 1) return;          // leave right-click alone
+    const w = clientToWorld(e);
+    const forced = e.button === 1 || (e.button === 0 && e.altKey);
+    const onEmpty = state.tool === 'select' && !state.pendingPlace &&
+      !circuit.componentAt(w.x, w.y) && !circuit.wireAt(w.x, w.y) && !circuit.terminalNear(w.x, w.y, 0.4);
+    if (!forced && !onEmpty) return;                                 // parts / wires / tools keep old behaviour
+    e.preventDefault();                                              // stops duplicate mouse events (old marquee)
+    state.dragging = null;
+    pan = {x:e.clientX, y:e.clientY, px:state.pan.x, py:state.pan.y, moved:false, id:e.pointerId, shift:e.shiftKey};
+    try { stage.setPointerCapture(e.pointerId); } catch(_){}
+    stage.classList.add('panning');
+  });
+
+  stage.addEventListener('pointermove', e => {
+    if (!pan || e.pointerId !== pan.id) return;
+    const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+    if (!pan.moved && Math.abs(dx) + Math.abs(dy) <= 3) return;     // tiny jitter = still a click
+    pan.moved = true;
+    state.pan.x = pan.px + dx; state.pan.y = pan.py + dy;
+    renderAll();
+  });
+
+  const end = e => {
+    if (!pan || e.pointerId !== pan.id) return;
+    const wasClick = !pan.moved && !pan.shift;
+    pan = null; stage.classList.remove('panning');
+    if (wasClick && e.type === 'pointerup'){ clearSelection(); renderAll(); }
+  };
+  stage.addEventListener('pointerup', end);
+  stage.addEventListener('pointercancel', end);
+})();
+</script>
 <script src="examples-fix.js"></script>
 <script src="analysis.js"></script>
 <script src="spice-highlight.js"></script>
